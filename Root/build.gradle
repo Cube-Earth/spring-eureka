@@ -1,0 +1,182 @@
+plugins {
+  id "earth.cube.github" version "1.0.0" apply false
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+  	
+subprojects { Project p ->
+
+	group "earth.cube.logkeeper"
+	version "1.0-SNAPSHOT"
+
+    apply plugin: 'java'
+	apply plugin: 'eclipse'
+	apply plugin: 'maven'
+  	apply plugin: 'maven-publish'
+  	apply plugin: 'signing'
+  		
+  	
+//  	 apply plugin: 'checkstyle'
+  apply plugin: 'eclipse-wtp'
+//  apply plugin: 'findbugs'
+//  apply plugin: 'jacoco'
+//  //apply plugin: 'jetty'
+//  apply plugin: 'pmd'
+ // apply plugin: 'war'
+
+    sourceCompatibility = 1.7
+	targetCompatibility = 1.7
+	
+/*
+	function addExtra() {
+		configurations { providedCompile }
+	
+		sourceSets.main.compileClasspath += configurations.providedCompile
+		sourceSets.test.compileClasspath += configurations.providedCompile
+		sourceSets.test.runtimeClasspath += configurations.providedCompile
+		eclipse.classpath.plusConfigurations += configurations.providedCompile
+	}
+*/
+
+
+task testJar(type: Jar, dependsOn: testClasses) {
+    baseName = "test-${project.archivesBaseName}"
+    from sourceSets.test.output
+ // classifier = 'test'
+}
+
+configurations {
+    tests.extendsFrom testRuntime
+}
+
+artifacts {
+    tests testJar
+}
+
+
+eclipse{
+    wtp{
+        facet{}
+    }
+}
+
+	repositories {
+    	mavenLocal()
+    
+		maven { url "http://repo.maven.apache.org/maven2" }
+  	}
+
+    dependencies {
+		compile fileTree(dir: 'lib', include: '**/*.jar')
+		testCompile group: 'junit', name: 'junit', version: '4.12'	
+    }
+    
+  	eclipseClasspath.doFirst {
+    	sourceSets*.java.srcDirs*.each { it.mkdirs() }
+    	sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+  	}
+  	
+  	afterEvaluate {
+            if(project.hasProperty('maven_aware')) {
+				publishing {
+			    	publications {
+			        	mavenJava(MavenPublication) {
+			            	from components.java
+			
+			 				artifact sourceJar
+							artifact packageJavadoc
+						}
+					}
+			  	}
+			  	
+				javadoc {
+					source = sourceSets.main.allJava
+					classpath = configurations.compileClasspath
+					
+					exclude '*Impl.java'
+				
+				  	options
+				  	{
+				    	setMemberLevel JavadocMemberLevel.PUBLIC
+				    	setAuthor true
+				
+				    	links "https://docs.oracle.com/javase/8/docs/api/"
+				 	}
+				}
+				
+				task sourceJar(type: Jar) {
+				  classifier = 'sources'
+				  from sourceSets.main.allJava
+				}
+				
+				task packageJavadoc(type: Jar) {
+				    from javadoc
+				    classifier = 'javadoc'
+				}
+				
+				artifacts {
+					archives sourceJar, packageJavadoc
+				}
+				
+				signing {
+    				sign configurations.archives
+    			}
+    			
+				uploadArchives {
+				  repositories {
+				    mavenDeployer {
+				      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+				
+				      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+				        authentication(userName: ossrhUsername, password: ossrhPassword)
+				      }
+				
+				      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+				        authentication(userName: ossrhUsername, password: ossrhPassword)
+				      }
+				
+				      pom.project {
+
+				        description 'Java project for propagating log messages via ZMQ to an ELK stack.'
+				        url 'https://github.com/Cube-Earth/LogKeeper'
+				
+				        scm {
+				          connection 'scm:git:https://github.com/Cube-Earth/LogKeeper'
+				          developerConnection 'scm:git:https://github.com/Cube-Earth/LogKeeper'
+				          url 'https://github.com/Cube-Earth/LogKeeper'
+				        }
+				
+				        licenses {
+				          license {
+				            name 'The Apache License, Version 2.0'
+				            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+				          }
+				        }
+				
+				        developers {
+				          developer {
+				            id 'Necromancer'
+				            name 'Necromancer'
+				            email 'necromancer@cube.earth'
+				          }
+				        }
+				      }
+				    }
+				  }
+				}    			
+    			 	
+    	}
+  	}
+  	
+  	configure(subprojects.findAll {it.hasProperty('publish')}) {
+            println 'x $it.name'
+    hello {
+            println '- I love to spend time in the arctic waters.'
+        }
+    }
+
+
+}
