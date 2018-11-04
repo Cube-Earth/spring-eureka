@@ -15,6 +15,8 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'war'
 
+version = '1.0.0'
+
 bootJar {
 	baseName = 'eureka'
 	version = '1.0.0'
@@ -62,6 +64,9 @@ github {
 	}
 }
 
+artifacts {
+    archives bootJar.archivePath;
+}
 
 task publish (overwrite: true, dependsOn: [ bootJar, bootWar, uploadArchives ]) {
 }
