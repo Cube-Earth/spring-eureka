@@ -1,4 +1,5 @@
 .DS_Store
+.gradle/
 /Root/.gradle/
 /Root/build/
 /Root/eureka/build/
